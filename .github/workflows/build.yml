@@ -7,56 +7,61 @@ on:
 
 jobs:
   build-android:
-    name: Android Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Cache Library
-        uses: actions/cache@v4
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.0
         with:
-          path: Library
-          key: Library-${{ runner.os }}-${{ hashFiles('**/Packages/manifest.json') }}
-          restore-keys: |
-            Library-${{ runner.os }}-
+          tool-cache: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Docker sanity check
+        run: |
+          docker --version
+          docker info || true
+          df -h
+
+      # (İlk denemede cache'i kapalı tutabilirsiniz)
+      # - name: Cache Library
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: Library
+      #     key: Library-${{ runner.os }}-${{ hashFiles('**/Packages/manifest.json') }}
 
       - name: Build APK
-        uses: game-ci/unity-builder@v2
+        uses: game-ci/unity-builder@v4
         with:
           projectPath: .
           unityVersion: 2022.3.40f1
           targetPlatform: Android
-          buildName: KelimeArenasi
-          versioning: Semantic
           androidExportType: apk
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: kelimearenasi-apk
           path: build/Android/*.apk
 
       - name: Build AAB
-        uses: game-ci/unity-builder@v2
+        uses: game-ci/unity-builder@v4
         with:
           projectPath: .
           unityVersion: 2022.3.40f1
           targetPlatform: Android
-          buildName: KelimeArenasi
-          versioning: Semantic
           androidExportType: aab
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 
-      - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: kelimearenasi-aab
           path: build/Android/*.aab
